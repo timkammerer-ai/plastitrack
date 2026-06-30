@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>PlastiTrack</title>
+<style>
+:root{--bg:#0A1628;--bg2:#0F1E35;--card:#132036;--card2:#1A2D47;--aqua:#00D4AA;--aqua2:#00B894;--aqua-glow:rgba(0,212,170,0.15);--orange:#FF6B35;--yellow:#FFD166;--red:#EF4444;--text:#F0F9FF;--text2:#94A3B8;--text3:#64748B;--border:rgba(255,255,255,0.07);--radius:20px;--radius-sm:12px;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Inter','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:420px;margin:0 auto;position:relative;overflow-x:hidden;padding-bottom:90px;}
+.screen{display:none;padding:0 0 24px;animation:fadeUp 0.25s ease;}
+.screen.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.status-bar{display:flex;justify-content:space-between;align-items:center;padding:14px 20px 0;font-size:13px;font-weight:600;color:var(--text2);}
+.status-bar .time{font-size:15px;font-weight:700;color:var(--text);}
+.page-header{padding:20px 20px 12px;display:flex;justify-content:space-between;align-items:flex-end;}
+.page-header h1{font-size:28px;font-weight:800;letter-spacing:-0.5px;}
+.page-header .sub{font-size:13px;color:var(--text2);margin-top:2px;}
+.avatar-icon{width:42px;height:42px;border-radius:50%;background:var(--card2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;}
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);margin:0 16px 12px;overflow:hidden;}
+.card-pad{padding:20px;}
+.card-title{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+#fish-container{position:relative;width:180px;height:180px;margin:0 auto 8px;}
+#fish-svg{width:100%;height:100%;animation:pulse 3s ease-in-out infinite;}
+@keyframes pulse{0%,100%{filter:drop-shadow(0 8px 24px rgba(0,212,170,0.3));}50%{filter:drop-shadow(0 8px 32px rgba(0,212,170,0.55));}}
+.level-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:50px;font-size:13px;font-weight:700;margin:0 auto;width:fit-content;}
+.stats-row{display:flex;gap:10px;}
+.stat-box{flex:1;background:var(--card2);border-radius:var(--radius-sm);padding:14px 12px;text-align:center;}
+.stat-box .stat-val{font-size:22px;font-weight:800;margin-bottom:2px;}
+.stat-box .stat-lbl{font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
+.week-chart{display:flex;align-items:flex-end;gap:8px;height:80px;padding:0 4px;}
+.bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;}
+.bar{width:100%;border-radius:6px 6px 0 0;min-height:4px;transition:height 0.6s ease;position:relative;cursor:pointer;}
+.bar-day{font-size:10px;color:var(--text3);font-weight:600;}
+
+/* --- SENSOR SCREEN --- */
+.sensor-hero{margin:0 16px 12px;background:var(--card);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;position:relative;}
+.sensor-top{padding:20px 20px 16px;background:linear-gradient(135deg,rgba(0,212,170,0.08),rgba(0,184,148,0.04));}
+.sensor-status-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.sensor-dot{width:10px;height:10px;border-radius:50%;background:var(--aqua);flex-shrink:0;animation:blink 2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,212,170,0.4);}50%{opacity:0.7;box-shadow:0 0 0 6px rgba(0,212,170,0);}}
+.sensor-status-txt{font-size:13px;font-weight:700;color:var(--aqua);}
+.sensor-status-sub{font-size:11px;color:var(--text2);margin-left:auto;}
+.sensor-weight-display{text-align:center;padding:8px 0 4px;}
+.sensor-grams{font-size:72px;font-weight:900;letter-spacing:-3px;line-height:1;background:linear-gradient(135deg,var(--aqua),#00F0C0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.sensor-unit{font-size:18px;font-weight:700;color:var(--text2);margin-top:4px;}
+.sensor-delta{display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;margin-top:8px;}
+.sensor-bar-wrap{padding:16px 20px 20px;border-top:1px solid var(--border);}
+.sensor-bar-label{display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:8px;font-weight:600;}
+.sensor-bar-bg{height:12px;background:var(--card2);border-radius:6px;overflow:hidden;position:relative;}
+.sensor-bar-fill{height:100%;border-radius:6px;transition:width 1.2s cubic-bezier(0.4,0,0.2,1);}
+.sensor-bar-marker{position:absolute;top:-4px;height:20px;width:2px;background:var(--aqua);border-radius:1px;}
+.sensor-mini-row{display:flex;gap:10px;padding:0 16px 12px;}
+.sensor-mini{flex:1;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center;}
+.sensor-mini-val{font-size:20px;font-weight:800;margin-bottom:2px;}
+.sensor-mini-lbl{font-size:10px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
+.connect-btn{margin:0 16px 12px;width:calc(100% - 32px);padding:16px;border-radius:var(--radius-sm);border:2px dashed rgba(0,212,170,0.3);background:rgba(0,212,170,0.04);color:var(--aqua);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;font-family:inherit;}
+.connect-btn:hover{border-color:var(--aqua);background:var(--aqua-glow);}
+.sim-btn{width:calc(100% - 32px);margin:0 16px;padding:16px;background:linear-gradient(135deg,var(--aqua),var(--aqua2));border:none;border-radius:var(--radius-sm);color:var(--bg);font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit;transition:all 0.2s;}
+.sim-btn:active{transform:scale(0.97);}
+.sim-btn.running{background:linear-gradient(135deg,#FF6B35,#E05520);}
+
+/* Positive actions */
+.cat-btn{background:var(--card);border:2px solid var(--border);border-radius:var(--radius-sm);padding:16px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:all 0.2s;position:relative;}
+.cat-btn.sel{border-color:var(--aqua);background:var(--aqua-glow);}
+.cat-btn.sel::after{content:"✓";position:absolute;top:8px;right:10px;font-size:12px;font-weight:800;color:var(--aqua);}
+.cat-emoji{font-size:28px;}
+.cat-name{font-size:12px;font-weight:700;color:var(--text2);text-align:center;}
+.cat-pts{font-size:11px;color:var(--aqua);font-weight:700;}
+.category-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 12px;}
+.amount-selector{margin:4px 16px 12px;background:var(--card);border-radius:var(--radius);padding:20px;}
+.amount-label{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;}
+.amount-row{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.amt-btn{width:48px;height:48px;border-radius:50%;border:none;background:var(--card2);color:var(--text);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;font-family:inherit;}
+.amt-btn:active{transform:scale(0.92);background:var(--aqua);color:var(--bg);}
+.amt-display{font-size:42px;font-weight:900;color:var(--aqua);letter-spacing:-1px;flex:1;text-align:center;}
+.submit-btn{margin:4px 16px 0;width:calc(100% - 32px);padding:18px;background:linear-gradient(135deg,var(--aqua),var(--aqua2));border:none;border-radius:var(--radius-sm);color:var(--bg);font-size:16px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;letter-spacing:-0.3px;font-family:inherit;}
+.submit-btn:active{transform:scale(0.97);}
+.submit-btn:disabled{opacity:0.4;cursor:not-allowed;}
+/* sensor pulse ring on icon */
+.bin-icon-wrap{position:relative;width:56px;height:56px;margin:0 auto 6px;}
+.bin-icon{font-size:36px;line-height:56px;text-align:center;display:block;}
+.bin-ring{position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--aqua);opacity:0;animation:ring 2.5s ease-out infinite;}
+.bin-ring2{animation-delay:1.25s;}
+@keyframes ring{0%{transform:scale(0.8);opacity:0.7;}100%{transform:scale(1.4);opacity:0;}}
+
+/* shared */
+.challenge-card{margin:0 16px 10px;background:var(--card);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;cursor:pointer;transition:all 0.2s;}
+.challenge-card.done{opacity:0.6;}
+.ch-header{padding:16px 16px 12px;display:flex;align-items:center;gap:12px;}
+.ch-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.ch-info{flex:1;}
+.ch-title{font-size:15px;font-weight:700;margin-bottom:2px;}
+.ch-desc{font-size:12px;color:var(--text2);}
+.ch-pts{font-size:13px;font-weight:800;color:var(--yellow);}
+.ch-progress{padding:0 16px 16px;}
+.ch-bar-bg{height:6px;background:var(--card2);border-radius:3px;overflow:hidden;}
+.ch-bar-fill{height:100%;border-radius:3px;transition:width 0.6s ease;}
+.ch-meta{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--text2);}
+.badge-done{background:rgba(0,212,170,0.15);color:var(--aqua);padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.period-tabs{display:flex;gap:6px;padding:8px 16px 16px;}
+.period-tab{flex:1;padding:9px;border-radius:10px;border:none;background:var(--card);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;font-family:inherit;}
+.period-tab.active{background:var(--aqua);color:var(--bg);}
+.impact-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 12px;}
+.impact-card{background:var(--card);border-radius:var(--radius-sm);padding:16px;border:1px solid var(--border);position:relative;overflow:hidden;}
+.impact-card::before{content:'';position:absolute;top:-20px;right:-20px;width:60px;height:60px;border-radius:50%;background:var(--aqua-glow);}
+.impact-val{font-size:28px;font-weight:900;letter-spacing:-1px;margin-bottom:2px;}
+.impact-lbl{font-size:11px;color:var(--text2);font-weight:600;}
+.impact-trend{font-size:11px;font-weight:700;margin-top:6px;}
+.trend-up{color:var(--red);}
+.trend-down{color:var(--aqua);}
+.profile-hero{padding:24px 20px 20px;text-align:center;}
+.profile-avatar{width:80px;height:80px;border-radius:50%;margin:0 auto 14px;background:linear-gradient(135deg,var(--aqua),var(--aqua2));display:flex;align-items:center;justify-content:center;font-size:36px;border:3px solid var(--card2);box-shadow:0 0 0 4px var(--aqua-glow);}
+.profile-name{font-size:22px;font-weight:800;margin-bottom:4px;}
+.profile-since{font-size:13px;color:var(--text2);}
+.profile-badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px;}
+.badge-chip{display:flex;align-items:center;gap:5px;padding:6px 12px;background:var(--card);border-radius:20px;border:1px solid var(--border);font-size:12px;font-weight:600;}
+.setting-row{display:flex;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;}
+.setting-row:last-child{border-bottom:none;}
+.setting-icon{font-size:20px;margin-right:14px;}
+.setting-text{flex:1;}
+.setting-label{font-size:15px;font-weight:600;}
+.setting-sub{font-size:12px;color:var(--text2);margin-top:1px;}
+.setting-arrow{color:var(--text3);font-size:18px;}
+.toggle{width:44px;height:26px;border-radius:13px;background:var(--card2);position:relative;cursor:pointer;transition:background 0.3s;flex-shrink:0;}
+.toggle.on{background:var(--aqua);}
+.toggle::after{content:'';position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px;left:3px;transition:transform 0.3s;}
+.toggle.on::after{transform:translateX(18px);}
+#bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;background:rgba(10,22,40,0.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:10px 0 24px;display:flex;z-index:100;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:6px 0;transition:all 0.15s;}
+.nav-icon{font-size:22px;transition:transform 0.2s;}
+.nav-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text3);transition:color 0.2s;}
+.nav-item.active .nav-icon{transform:scale(1.15);}
+.nav-item.active .nav-label{color:var(--aqua);}
+#toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--aqua);color:var(--bg);padding:12px 24px;border-radius:50px;font-size:14px;font-weight:800;opacity:0;transition:all 0.3s;z-index:200;pointer-events:none;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:300;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);}
+#modal-overlay.open{display:flex;}
+#modal{background:var(--card);border-radius:28px 28px 0 0;width:100%;max-width:420px;padding:24px 24px 44px;max-height:80vh;overflow-y:auto;animation:slideUp 0.3s ease;}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.modal-handle{width:36px;height:4px;background:var(--card2);border-radius:2px;margin:0 auto 20px;}
+.modal-title{font-size:20px;font-weight:800;margin-bottom:12px;}
+.modal-body{font-size:14px;color:var(--text2);line-height:1.6;}
+.section-title{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;padding:0 20px 10px;}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.chip-aqua{background:rgba(0,212,170,0.15);color:var(--aqua);}
+.chip-orange{background:rgba(255,107,53,0.15);color:var(--orange);}
+.chip-yellow{background:rgba(255,209,102,0.15);color:var(--yellow);}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="screen-home" class="screen active">
+  <div class="status-bar"><span class="time" id="clk">9:41</span><div style="display:flex;gap:6px"><span>📶</span><span>🔋</span></div></div>
+  <div class="page-header"><div><h1>PlastiTrack</h1><div class="sub" id="home-date"></div></div><div class="avatar-icon" onclick="switchScreen('profile')">🐟</div></div>
+  <div class="card">
+    <div class="card-pad" style="text-align:center">
+      <div class="card-title">Dein Avatar</div>
+      <div id="fish-container">
+        <svg id="fish-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <clipPath id="fishClip"><path d="M100 28 C58 28 22 58 18 100 C14 142 40 172 100 176 C160 172 186 142 182 100 C178 58 142 28 100 28 Z"/></clipPath>
+            <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00D4AA" stop-opacity="0.2"/><stop offset="100%" stop-color="#FF6B35" stop-opacity="0.8"/></linearGradient>
+          </defs>
+          <rect id="plastic-fill" x="0" y="148" width="200" height="200" fill="url(#pg)" clip-path="url(#fishClip)" style="transition:y 1.5s cubic-bezier(0.4,0,0.2,1)"/>
+          <g clip-path="url(#fishClip)" opacity="0.8">
+            <ellipse cx="68" cy="162" rx="13" ry="6" fill="#60A5FA" opacity="0.8"/>
+            <ellipse cx="122" cy="157" rx="9" ry="5" fill="#F472B6" opacity="0.7"/>
+            <ellipse cx="90" cy="170" rx="11" ry="4" fill="#34D399" opacity="0.6"/>
+            <rect x="107" y="164" width="19" height="6" rx="2" fill="#FBBF24" opacity="0.7"/>
+            <ellipse cx="52" cy="172" rx="8" ry="4" fill="#A78BFA" opacity="0.6"/>
+            <ellipse cx="143" cy="167" rx="10" ry="5" fill="#FB923C" opacity="0.7"/>
+            <rect x="76" y="174" width="15" height="5" rx="1" fill="#60A5FA" opacity="0.5"/>
+            <ellipse cx="116" cy="176" rx="7" ry="3" fill="#F472B6" opacity="0.5"/>
+          </g>
+          <path d="M100 28 C58 28 22 58 18 100 C14 142 40 172 100 176 C160 172 186 142 182 100 C178 58 142 28 100 28 Z" fill="none" stroke="#00D4AA" stroke-width="2.5" opacity="0.8"/>
+          <path d="M172 84 L198 62 L202 100 L198 138 L172 116" fill="none" stroke="#00D4AA" stroke-width="2.5" opacity="0.7"/>
+          <circle cx="64" cy="84" r="11" fill="rgba(0,212,170,0.12)" stroke="#00D4AA" stroke-width="1.5"/>
+          <circle cx="64" cy="84" r="5.5" fill="#F0F9FF"/>
+          <circle cx="66" cy="82" r="2.8" fill="#0A1628"/>
+          <path d="M78 50 C90 34 118 40 122 56" fill="none" stroke="#00D4AA" stroke-width="2" opacity="0.5"/>
+          <path id="fish-mouth" d="M48 110 Q57 117 66 110" fill="none" stroke="#00D4AA" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div id="level-badge" class="level-badge chip chip-aqua" style="margin-bottom:8px">🙂 Level 2 – Gut</div>
+      <div id="level-pct-label" style="font-size:12px;color:var(--text2)">38% Plastik-Level</div>
+    </div>
+    <div style="padding:0 20px 20px">
+      <div style="height:8px;background:var(--card2);border-radius:4px;overflow:hidden"><div id="main-progress-bar" style="height:100%;width:38%;background:linear-gradient(90deg,var(--aqua),var(--aqua2));border-radius:4px;transition:width 1s ease"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--text2)"><span>0%</span><span style="color:var(--aqua);font-weight:700">Ziel: unter 25%</span><span>100%</span></div>
+    </div>
+  </div>
+  <div style="padding:0 16px;margin-bottom:12px"><div class="stats-row"><div class="stat-box"><div class="stat-val" style="color:var(--aqua)" id="pts-display">1.250</div><div class="stat-lbl">Punkte</div></div><div class="stat-box"><div class="stat-val" style="color:var(--yellow)" id="streak-display">7</div><div class="stat-lbl">Streak 🔥</div></div><div class="stat-box"><div class="stat-val" id="animals-display">3</div><div class="stat-lbl">Gerettet 🐢</div></div></div></div>
+  <div class="card">
+    <div class="card-pad" style="padding-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><div class="card-title" style="margin:0">Diese Woche</div><span class="chip chip-aqua">−12% vs. Vorwoche</span></div>
+      <div class="week-chart" id="week-chart"></div>
+    </div>
+  </div>
+  <!-- Mülleimer CTA statt Eintragen -->
+  <div style="padding:16px 16px 0"><button class="submit-btn" onclick="switchScreen('input')" style="width:100%;margin:0"><span style="font-size:18px">🗑️</span> Mülleimer-Sensor</button></div>
+  <div style="padding:16px 0 0">
+    <div class="section-title">Aktive Challenge</div>
+    <div class="challenge-card" onclick="switchScreen('challenges')">
+      <div class="ch-header"><div class="ch-icon" style="background:rgba(255,209,102,0.15)">♻️</div><div class="ch-info"><div class="ch-title">7 Tage plastikfrei einkaufen</div><div class="ch-desc">Tag 5 von 7 — fast geschafft!</div></div><div class="ch-pts">+500 Pts</div></div>
+      <div class="ch-progress"><div class="ch-bar-bg"><div class="ch-bar-fill" style="width:71%;background:linear-gradient(90deg,var(--yellow),var(--orange))"></div></div><div class="ch-meta"><span>5/7 Tage</span><span>2 Tage übrig</span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- TRACKER / MÜLLEIMER -->
+<div id="screen-input" class="screen">
+  <div class="status-bar"><span class="time">9:41</span><div style="display:flex;gap:6px"><span>📶</span><span>🔋</span></div></div>
+  <div class="page-header"><div><h1>Mülleimer</h1><div class="sub">Automatisches Plastik-Tracking</div></div>
+    <div style="font-size:11px;font-weight:700;color:var(--aqua);background:var(--aqua-glow);padding:5px 10px;border-radius:20px;" id="conn-badge">● Verbunden</div>
+  </div>
+
+  <!-- Live sensor card -->
+  <div class="sensor-hero">
+    <div class="sensor-top">
+      <div class="sensor-status-row">
+        <div class="sensor-dot" id="sensor-dot"></div>
+        <span class="sensor-status-txt" id="sensor-status-txt">Live · Messe Plastikgewicht</span>
+        <span class="sensor-status-sub" id="sensor-last-update">Jetzt aktuell</span>
+      </div>
+      <div class="sensor-weight-display">
+        <div class="bin-icon-wrap"><span class="bin-icon">🗑️</span><div class="bin-ring"></div><div class="bin-ring bin-ring2"></div></div>
+        <div class="sensor-grams" id="sensor-grams">247</div>
+        <div class="sensor-unit">Gramm heute</div>
+        <div class="sensor-delta chip chip-orange" id="sensor-delta" style="margin-top:10px">↑ +38g seit letzter Messung</div>
+      </div>
+    </div>
+    <div class="sensor-bar-wrap">
+      <div class="sensor-bar-label"><span>Heute</span><span id="sensor-bar-label-right">247g / Tagesziel: 400g</span></div>
+      <div class="sensor-bar-bg">
+        <div class="sensor-bar-fill" id="sensor-bar-fill" style="width:62%;background:linear-gradient(90deg,var(--aqua),var(--yellow))"></div>
+        <div class="sensor-bar-marker" style="left:62%"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:10px;color:var(--text3)"><span>0g</span><span style="color:var(--aqua);font-weight:700">✓ Ziel: &lt;400g</span><span>600g+</span></div>
+    </div>
+  </div>
+
+  <!-- Mini stats -->
+  <div class="sensor-mini-row">
+    <div class="sensor-mini"><div class="sensor-mini-val" style="color:var(--aqua)" id="week-total">1.240g</div><div class="sensor-mini-lbl">Diese Woche</div></div>
+    <div class="sensor-mini"><div class="sensor-mini-val" style="color:var(--yellow)" id="month-total">4.8 kg</div><div class="sensor-mini-lbl">Dieser Monat</div></div>
+    <div class="sensor-mini"><div class="sensor-mini-val" style="color:var(--orange)" id="vs-avg">−23%</div><div class="sensor-mini-lbl">vs. Ø Nutzer</div></div>
+  </div>
+
+  <!-- Simulate / Live toggle -->
+  <button class="sim-btn" id="sim-btn" onclick="toggleSim()"><span id="sim-icon">▶</span> <span id="sim-label">Messung simulieren</span></button>
+  <div style="padding:8px 16px;font-size:11px;color:var(--text3);text-align:center">Simuliert Live-Daten vom Sensor-Artefakt</div>
+
+  <!-- Connect device -->
+  <div style="padding:8px 0 4px"><div class="section-title">Gerät</div></div>
+  <button class="connect-btn" onclick="openModal('Mülleimer verbinden','Um deinen smarten PlastiTrack-Mülleimer zu verbinden, scanne den QR-Code auf dem Gerät oder gib die Geräte-ID manuell ein.\n\nDas Artefakt misst automatisch das Gewicht des Plastikabfalls und sendet die Daten alle 15 Minuten an die App.\n\nKompatibel mit PlastiTrack Sensor v1.0 (ESP32 + Wägezelle).')">
+    <span style="font-size:20px">📡</span> Neues Gerät verbinden
+  </button>
+  <div class="card" style="margin-top:4px">
+    <div class="card-pad" style="padding:16px 20px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:44px;height:44px;border-radius:12px;background:var(--aqua-glow);border:1px solid rgba(0,212,170,0.2);display:flex;align-items:center;justify-content:center;font-size:22px">🗑️</div>
+        <div style="flex:1"><div style="font-size:14px;font-weight:700">PlastiTrack Bin #1</div><div style="font-size:11px;color:var(--text2);margin-top:2px">Küche · ID: PT-BIN-0042</div></div>
+        <div style="text-align:right"><div style="font-size:11px;font-weight:700;color:var(--aqua)">● Online</div><div style="font-size:10px;color:var(--text3);margin-top:2px">Akku 87%</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Positive actions (remain manual) -->
+  <div style="padding:16px 0 4px"><div class="section-title">✅ Gute Aktionen — manuell eintragen</div></div>
+  <div style="padding:0 16px 8px;font-size:12px;color:var(--text2)">Plastik vermieden? Trag es hier ein und sammle Punkte.</div>
+  <div class="category-grid">
+    <div class="cat-btn" onclick="selectCat(this,'Recycelt',50)"><span class="cat-emoji">♻️</span><span class="cat-name">Recycelt</span><span class="cat-pts">+50 Pts</span></div>
+    <div class="cat-btn" onclick="selectCat(this,'Eigene Flasche',40)"><span class="cat-emoji">💧</span><span class="cat-name">Eigene Flasche</span><span class="cat-pts">+40 Pts</span></div>
+    <div class="cat-btn" onclick="selectCat(this,'Stofftasche',35)"><span class="cat-emoji">👜</span><span class="cat-name">Stofftasche</span><span class="cat-pts">+35 Pts</span></div>
+    <div class="cat-btn" onclick="selectCat(this,'Unverpackt',60)"><span class="cat-emoji">🥦</span><span class="cat-name">Unverpackt</span><span class="cat-pts">+60 Pts</span></div>
+  </div>
+  <div class="amount-selector">
+    <div class="amount-label">Menge</div>
+    <div class="amount-row"><button class="amt-btn" onclick="changeAmount(-1)">−</button><div><div class="amt-display" id="amount-display">1</div></div><button class="amt-btn" onclick="changeAmount(1)">+</button></div>
+    <div style="text-align:center;font-size:12px;color:var(--text2);margin-top:8px" id="points-preview">Wähle eine Aktion</div>
+  </div>
+  <button class="submit-btn" id="submit-entry" onclick="submitEntry()" disabled>✓ Aktion eintragen</button>
+  <div style="height:20px"></div>
+</div>
+
+<!-- CHALLENGES -->
+<div id="screen-challenges" class="screen">
+  <div class="status-bar"><span class="time">9:41</span><div style="display:flex;gap:6px"><span>📶</span><span>🔋</span></div></div>
+  <div class="page-header"><div><h1>Challenges</h1><div class="sub">3 aktiv · 2 verfügbar</div></div><div style="font-size:24px">🏆</div></div>
+  <div class="section-title">🔥 Aktiv</div>
+  <div class="challenge-card" onclick="openChallenge('7 Tage plastikfrei einkaufen','5 Tage hast du bereits ohne Plastiktüten eingekauft. Noch 2 Tage — dann bekommst du den goldenen Fisch-Skin und 500 Punkte!','71','5','7','Tag','+500 Pts 🐟 Goldener Skin')">
+    <div class="ch-header"><div class="ch-icon" style="background:rgba(255,209,102,0.15)">🛍️</div><div class="ch-info"><div class="ch-title">7 Tage plastikfrei einkaufen</div><div class="ch-desc">Vermeide Plastiktüten beim Einkauf</div></div><div class="ch-pts">+500 Pts</div></div>
+    <div class="ch-progress"><div class="ch-bar-bg"><div class="ch-bar-fill" style="width:71%;background:linear-gradient(90deg,var(--yellow),var(--orange))"></div></div><div class="ch-meta"><span>5/7 Tage</span><span>2 Tage übrig</span></div></div>
+  </div>
+  <div class="challenge-card" onclick="openChallenge('Recycling-Woche','Du hast diese Woche bereits 3 mal korrekt recycelt. Mach weiter so und erreiche 5 mal bis Sonntag!','60','3','5','mal','+300 Pts')">
+    <div class="ch-header"><div class="ch-icon" style="background:rgba(0,212,170,0.15)">♻️</div><div class="ch-info"><div class="ch-title">Recycling-Woche</div><div class="ch-desc">5× diese Woche korrekt recyceln</div></div><div class="ch-pts">+300 Pts</div></div>
+    <div class="ch-progress"><div class="ch-bar-bg"><div class="ch-bar-fill" style="width:60%;background:linear-gradient(90deg,var(--aqua),var(--aqua2))"></div></div><div class="ch-meta"><span>3/5 mal</span><span>Bis Sonntag</span></div></div>
+  </div>
+  <div class="challenge-card" onclick="openChallenge('Plastikfrei-Streak','Heute ist dein 7. Tag in Folge ohne Einwegplastik. Bleib am Ball und knacke die 10-Tage-Marke!','70','7','10','Tage','+200 Pts 🐢 Schildkröten-Badge')">
+    <div class="ch-header"><div class="ch-icon" style="background:rgba(167,139,250,0.15)">🔥</div><div class="ch-info"><div class="ch-title">Plastikfrei-Streak</div><div class="ch-desc">10 Tage in Folge kein Einwegplastik</div></div><div class="ch-pts">+200 Pts</div></div>
+    <div class="ch-progress"><div class="ch-bar-bg"><div class="ch-bar-fill" style="width:70%;background:linear-gradient(90deg,#A78BFA,#7C3AED)"></div></div><div class="ch-meta"><span>7/10 Tage</span><span>3 Tage übrig</span></div></div>
+  </div>
+  <div class="section-title" style="margin-top:8px">✅ Abgeschlossen</div>
+  <div class="challenge-card done"><div class="ch-header"><div class="ch-icon" style="background:rgba(0,212,170,0.1)">🌍</div><div class="ch-info"><div class="ch-title">Erste Woche plastikbewusst</div><div class="ch-desc">7 Tage täglich tracken</div></div><div class="badge-done">✓ Erledigt</div></div></div>
+  <div class="challenge-card done"><div class="ch-header"><div class="ch-icon" style="background:rgba(255,209,102,0.1)">💧</div><div class="ch-info"><div class="ch-title">Eigene Flasche nutzen</div><div class="ch-desc">5 mal statt Plastikflasche</div></div><div class="badge-done">✓ Erledigt</div></div></div>
+  <div class="section-title" style="margin-top:8px">🔓 Verfügbar</div>
+  <div class="challenge-card" onclick="openChallenge('Zero Waste Woche','Schaffe es eine ganze Woche ohne jegliches Einwegplastik. Das ist die härteste Challenge — aber die Belohnung ist legendär!','0','0','7','Tage','+1.000 Pts 🌟 Legendärer Skin')">
+    <div class="ch-header"><div class="ch-icon" style="background:rgba(239,68,68,0.15)">🌿</div><div class="ch-info"><div class="ch-title">Zero Waste Woche</div><div class="ch-desc">7 Tage ohne jegliches Einwegplastik</div></div><div class="ch-pts" style="color:var(--red)">+1.000 Pts</div></div>
+    <div class="ch-progress"><div class="ch-bar-bg"><div class="ch-bar-fill" style="width:0%"></div></div><div class="ch-meta"><span>0/7 Tage</span><span>Noch nicht gestartet</span></div></div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div id="screen-stats" class="screen">
+  <div class="status-bar"><span class="time">9:41</span><div style="display:flex;gap:6px"><span>📶</span><span>🔋</span></div></div>
+  <div class="page-header"><div><h1>Statistiken</h1><div class="sub">Dein Fortschritt</div></div><div style="font-size:24px">📊</div></div>
+  <div class="period-tabs"><button class="period-tab active" onclick="setPeriod(this,'Woche')">Woche</button><button class="period-tab" onclick="setPeriod(this,'Monat')">Monat</button><button class="period-tab" onclick="setPeriod(this,'Quartal')">Quartal</button><button class="period-tab" onclick="setPeriod(this,'Jahr')">Jahr</button></div>
+  <div class="impact-grid">
+    <div class="impact-card"><div class="impact-val" style="color:var(--aqua)" id="stat-level">38%</div><div class="impact-lbl">Plastik-Level</div><div class="impact-trend trend-down">↓ −12% diese Woche</div></div>
+    <div class="impact-card"><div class="impact-val" style="color:var(--yellow)" id="stat-pts">1.250</div><div class="impact-lbl">Punkte gesamt</div><div class="impact-trend" style="color:var(--aqua)">↑ +340 diese Woche</div></div>
+    <div class="impact-card"><div class="impact-val" id="stat-animals">3</div><div class="impact-lbl">Tiere gerettet</div><div class="impact-trend" style="color:var(--text2)">🐟 🐢 🦜</div></div>
+    <div class="impact-card"><div class="impact-val" style="color:var(--orange)">1.2 kg</div><div class="impact-lbl">Plastik diese Woche</div><div class="impact-trend trend-down">↓ −23% vs. Vorwoche</div></div>
+  </div>
+  <div class="card">
+    <div class="card-pad">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><div class="card-title" style="margin:0">Plastik-Level Verlauf</div><span class="chip chip-aqua">Trend ↓</span></div>
+      <div class="week-chart" id="stats-chart"></div>
+      <div style="margin-top:16px;display:flex;gap:12px"><div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)"><div style="width:10px;height:10px;border-radius:50%;background:var(--orange)"></div>Sensor-Daten</div><div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)"><div style="width:10px;height:10px;border-radius:50%;background:var(--aqua)"></div>Mit positiven Aktionen</div></div>
+    </div>
+  </div>
+  <div class="card"><div class="card-pad"><div class="card-title">Gewicht nach Tag (Sensor)</div><div id="breakdown-list"></div></div></div>
+  <div class="card"><div class="card-pad" style="text-align:center"><div class="card-title">Dein Impact</div><div style="font-size:36px;margin-bottom:4px">🐢</div><div style="font-size:20px;font-weight:800;margin-bottom:8px">3 Tiere gerettet</div><div style="font-size:13px;color:var(--text2);line-height:1.6">Durch dein Verhalten hast du diesen Monat schätzungsweise <strong style="color:var(--aqua)">2,3 kg Plastik</strong> vermieden — das entspricht dem Mageninhalt einer geretteten Schildkröte.</div></div></div>
+</div>
+
+<!-- PROFILE -->
+<div id="screen-profile" class="screen">
+  <div class="status-bar"><span class="time">9:41</span><div style="display:flex;gap:6px"><span>📶</span><span>🔋</span></div></div>
+  <div class="profile-hero">
+    <div class="profile-avatar">🐟</div>
+    <div class="profile-name">Tim M.</div>
+    <div class="profile-since">Dabei seit März 2026 · Level 2</div>
+    <div class="profile-badges"><div class="badge-chip">🏅 Erste Woche</div><div class="badge-chip">💧 Hydration Hero</div><div class="badge-chip">🔥 7-Tage-Streak</div></div>
+  </div>
+  <div class="section-title">Mein Avatar</div>
+  <div class="card"><div class="card-pad" style="text-align:center"><div style="font-size:13px;color:var(--text2);margin-bottom:16px">Schalte Skins mit deinen Punkten frei</div><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><div style="text-align:center;cursor:pointer" onclick="showToast('Aktiver Skin! 🐟')"><div style="width:60px;height:60px;border-radius:16px;background:var(--aqua-glow);border:2px solid var(--aqua);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 6px">🐟</div><div style="font-size:10px;color:var(--aqua);font-weight:700">Standard ✓</div></div><div style="text-align:center;cursor:pointer" onclick="showToast('Noch 250 Punkte nötig!')"><div style="width:60px;height:60px;border-radius:16px;background:var(--card2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 6px;opacity:0.45">🐠</div><div style="font-size:10px;color:var(--text3);font-weight:700">1.500 Pts</div></div><div style="text-align:center;cursor:pointer" onclick="showToast('Noch nicht verfügbar!')"><div style="width:60px;height:60px;border-radius:16px;background:var(--card2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 6px;opacity:0.45">🐡</div><div style="font-size:10px;color:var(--text3);font-weight:700">2.500 Pts</div></div><div style="text-align:center;cursor:pointer" onclick="showToast('Challenge abschließen!')"><div style="width:60px;height:60px;border-radius:16px;background:rgba(255,209,102,0.1);border:2px solid rgba(255,209,102,0.25);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 6px;opacity:0.45">🏆</div><div style="font-size:10px;color:var(--yellow);font-weight:700">Challenge</div></div></div></div></div>
+  <div class="section-title">Einstellungen</div>
+  <div class="card" style="padding:0">
+    <div class="setting-row" onclick="toggleSetting(this)"><span class="setting-icon">🔔</span><div class="setting-text"><div class="setting-label">Push-Benachrichtigungen</div><div class="setting-sub">Tägliche Erinnerung um 18:00 Uhr</div></div><div class="toggle on"></div></div>
+    <div class="setting-row" onclick="toggleSetting(this)"><span class="setting-icon">📊</span><div class="setting-text"><div class="setting-label">Wochenreport</div><div class="setting-sub">Jeden Montag per Zusammenfassung</div></div><div class="toggle on"></div></div>
+    <div class="setting-row" onclick="toggleSetting(this)"><span class="setting-icon">👥</span><div class="setting-text"><div class="setting-label">Freunde-Rangliste</div><div class="setting-sub">Im Vergleich mit deinen Kontakten</div></div><div class="toggle"></div></div>
+    <div class="setting-row" onclick="openModal('Datenschutz','PlastiTrack speichert deine Daten lokal auf deinem Gerät. Es werden keine personenbezogenen Daten an Dritte weitergegeben. Sensor-Daten vom Mülleimer-Artefakt werden verschlüsselt übertragen.')"><span class="setting-icon">🔒</span><div class="setting-text"><div class="setting-label">Datenschutz</div><div class="setting-sub">Deine Daten gehören dir</div></div><span class="setting-arrow">›</span></div>
+    <div class="setting-row" onclick="openModal('Über PlastiTrack','Version 1.0.0 — Entwickelt von Markus, Rudi & Tim im Rahmen des Digital Business Projekts an der Hochschule Magdeburg-Stendal.\n\n🗑️ Smart Bin Artefakt: ESP32 + Wägezelle\n🐟 Gemeinsam für eine plastikärmere Zukunft!')"><span class="setting-icon">ℹ️</span><div class="setting-text"><div class="setting-label">Über PlastiTrack</div><div class="setting-sub">Version 1.0.0 · Sensor-Artefakt</div></div><span class="setting-arrow">›</span></div>
+  </div>
+  <div style="height:16px"></div>
+</div>
+
+<nav id="bottom-nav">
+  <div class="nav-item active" onclick="switchScreen('home')" id="nav-home"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></div>
+  <div class="nav-item" onclick="switchScreen('input')" id="nav-input"><span class="nav-icon">🗑️</span><span class="nav-label">Tracker</span></div>
+  <div class="nav-item" onclick="switchScreen('challenges')" id="nav-challenges"><span class="nav-icon">🏆</span><span class="nav-label">Challenges</span></div>
+  <div class="nav-item" onclick="switchScreen('stats')" id="nav-stats"><span class="nav-icon">📊</span><span class="nav-label">Stats</span></div>
+  <div class="nav-item" onclick="switchScreen('profile')" id="nav-profile"><span class="nav-icon">👤</span><span class="nav-label">Profil</span></div>
+</nav>
+<div id="toast"></div>
+<div id="modal-overlay" onclick="closeModal()"><div id="modal" onclick="event.stopPropagation()"><div class="modal-handle"></div><div class="modal-title" id="modal-title"></div><div class="modal-body" id="modal-body"></div><div id="modal-extra" style="margin-top:12px"></div></div></div>
+
+<script>
+var S={level:38,points:1250,streak:7,animals:3,sensorGrams:247};
+var selCat=null,selPts=0,amt=1;
+var simRunning=false,simInterval=null;
+
+function tick(){var n=new Date(),t=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');document.querySelectorAll('.time').forEach(function(e){e.textContent=t;});}
+tick();setInterval(tick,15000);
+
+(function(){var d=new Date();var days=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];var months=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];var el=document.getElementById('home-date');if(el)el.textContent=days[d.getDay()]+', '+d.getDate()+'. '+months[d.getMonth()]+' '+d.getFullYear();})();
+
+function switchScreen(n){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  var sc=document.getElementById('screen-'+n);if(sc)sc.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(function(x){x.classList.remove('active');});
+  var nav=document.getElementById('nav-'+n);if(nav)nav.classList.add('active');
+  window.scrollTo(0,0);
+  if(n==='home')renderHome();
+  if(n==='stats')renderStats();
+}
+
+function updateFish(lvl){
+  var fill=document.getElementById('plastic-fill');
+  var badge=document.getElementById('level-badge');
+  var bar=document.getElementById('main-progress-bar');
+  var mouth=document.getElementById('fish-mouth');
+  var lbl=document.getElementById('level-pct-label');
+  if(!fill)return;
+  var y=200-(lvl/100)*178;
+  fill.setAttribute('y',y);
+  if(bar)bar.style.width=Math.min(100,lvl)+'%';
+  if(lbl)lbl.textContent=lvl+'% Plastik-Level';
+  var btext,bcls,smilePath,barCol;
+  if(lvl<=25){btext='😊 Level 1 – Sehr gut';bcls='chip chip-aqua';smilePath='M48 110 Q57 117 66 110';barCol='#00D4AA';}
+  else if(lvl<=50){btext='🙂 Level 2 – Gut';bcls='chip chip-aqua';smilePath='M48 110 Q57 116 66 110';barCol='#00D4AA';}
+  else if(lvl<=75){btext='😐 Level 3 – Ok';bcls='chip chip-yellow';smilePath='M48 112 L66 112';barCol='#FFD166';}
+  else{btext='😟 Level 4 – Schlecht';bcls='chip chip-orange';smilePath='M48 114 Q57 107 66 114';barCol='#FF6B35';}
+  if(badge){badge.textContent=btext;badge.className='level-badge '+bcls;}
+  if(mouth)mouth.setAttribute('d',smilePath);
+  if(bar)bar.style.background='linear-gradient(90deg,'+barCol+','+barCol+'99)';
+}
+
+function renderHome(){
+  updateFish(S.level);
+  var p=document.getElementById('pts-display');if(p)p.textContent=S.points.toLocaleString('de');
+  var sk=document.getElementById('streak-display');if(sk)sk.textContent=S.streak;
+  var an=document.getElementById('animals-display');if(an)an.textContent=S.animals;
+  renderChart('week-chart',[62,55,48,43,38,35,S.level],['Mo','Di','Mi','Do','Fr','Sa','So']);
+}
+
+function renderChart(id,vals,labels){
+  var chart=document.getElementById(id);if(!chart)return;
+  chart.innerHTML='';
+  var maxV=Math.max.apply(null,vals.concat([1]));
+  vals.forEach(function(v,i){
+    var pct=(v/maxV)*100;
+    var isToday=(i===vals.length-1);
+    var col=v<=25?'#00D4AA':v<=50?'#00D4AA':v<=75?'#FFD166':'#FF6B35';
+    var wrap=document.createElement('div');wrap.className='bar-wrap';
+    var bar=document.createElement('div');bar.className='bar';
+    bar.style.cssText='height:'+pct+'%;background:'+(isToday?col:col+'55')+';'+(isToday?'border:2px solid '+col:'');
+    var day=document.createElement('div');day.className='bar-day';
+    if(isToday)day.style.color='var(--aqua)';
+    day.textContent=labels[i];
+    wrap.appendChild(bar);wrap.appendChild(day);
+    chart.appendChild(wrap);
+  });
+}
+
+// SENSOR SIM
+function updateSensorUI(grams,delta){
+  var el=document.getElementById('sensor-grams');if(el)el.textContent=grams;
+  var pct=Math.min(100,Math.round((grams/600)*100));
+  var fill=document.getElementById('sensor-bar-fill');
+  if(fill){
+    var col=pct<40?'#00D4AA,#00B894':pct<67?'#00D4AA,#FFD166':'#FFD166,#FF6B35';
+    fill.style.width=pct+'%';
+    fill.style.background='linear-gradient(90deg,'+col+')';
+  }
+  var lbl=document.getElementById('sensor-bar-label-right');if(lbl)lbl.textContent=grams+'g / Tagesziel: 400g';
+  var dt=document.getElementById('sensor-delta');
+  if(dt){
+    if(delta>0){dt.textContent='↑ +'+delta+'g seit letzter Messung';dt.className='sensor-delta chip chip-orange';}
+    else{dt.textContent='↓ '+delta+'g seit letzter Messung';dt.className='sensor-delta chip chip-aqua';}
+  }
+  // update fish level from sensor
+  S.level=Math.round((grams/600)*100);
+  S.sensorGrams=grams;
+  updateFish(S.level);
+  var sp=document.getElementById('stat-level');if(sp)sp.textContent=S.level+'%';
+}
+
+function toggleSim(){
+  var btn=document.getElementById('sim-btn');
+  var icon=document.getElementById('sim-icon');
+  var lbl=document.getElementById('sim-label');
+  var st=document.getElementById('sensor-status-txt');
+  var upd=document.getElementById('sensor-last-update');
+  if(!simRunning){
+    simRunning=true;
+    btn.classList.add('running');
+    icon.textContent='⏹';
+    lbl.textContent='Simulation stoppen';
+    if(st)st.textContent='Live · Simuliere Sensor-Einwürfe';
+    simInterval=setInterval(function(){
+      var delta=Math.floor(Math.random()*45)+5;
+      var neg=Math.random()>0.7;
+      if(neg)delta=-Math.floor(Math.random()*15+3);
+      var newG=Math.max(0,Math.min(600,S.sensorGrams+delta));
+      if(upd)upd.textContent='Aktualisiert gerade eben';
+      updateSensorUI(newG,delta);
+      showToast((delta>0?'🗑️ +'+delta+'g Plastik erfasst':'♻️ −'+Math.abs(delta)+'g – gut gemacht!'));
+    },3000);
+  } else {
+    simRunning=false;
+    clearInterval(simInterval);
+    btn.classList.remove('running');
+    icon.textContent='▶';
+    lbl.textContent='Messung simulieren';
+    if(st)st.textContent='Live · Messe Plastikgewicht';
+    if(upd)upd.textContent='Zuletzt vor 3 Min.';
+  }
+}
+
+// POSITIVE ACTIONS
+function selectCat(el,name,pts){
+  document.querySelectorAll('.cat-btn').forEach(function(b){b.classList.remove('sel');});
+  el.classList.add('sel');
+  selCat=name;selPts=pts;
+  updatePreview();
+  document.getElementById('submit-entry').disabled=false;
+}
+function changeAmount(d){amt=Math.max(1,Math.min(20,amt+d));document.getElementById('amount-display').textContent=amt;updatePreview();}
+function updatePreview(){
+  var el=document.getElementById('points-preview');
+  if(!selCat){el.textContent='Wähle eine Aktion';return;}
+  var total=selPts*amt;
+  el.innerHTML='<span style="color:var(--aqua);font-weight:700">+'+total+' Punkte</span> · '+amt+'× '+selCat;
+}
+function submitEntry(){
+  if(!selCat)return;
+  var pts=selPts*amt;
+  S.points+=pts;
+  S.level=Math.max(0,S.level-(amt*3));
+  // also reduce sensor grams symbolically
+  S.sensorGrams=Math.max(0,S.sensorGrams-(amt*15));
+  updateSensorUI(S.sensorGrams,-amt*15);
+  showToast('✅ '+amt+'× '+selCat+' — +'+pts+' Pts');
+  document.querySelectorAll('.cat-btn').forEach(function(b){b.classList.remove('sel');});
+  selCat=null;amt=1;
+  document.getElementById('amount-display').textContent='1';
+  document.getElementById('points-preview').textContent='Wähle eine Aktion';
+  document.getElementById('submit-entry').disabled=true;
+  var spt=document.getElementById('stat-pts');if(spt)spt.textContent=S.points.toLocaleString('de');
+  setTimeout(function(){switchScreen('home');},500);
+}
+
+function renderStats(){
+  renderChart('stats-chart',[62,55,48,43,38,35,S.level],['Mo','Di','Mi','Do','Fr','Sa','So']);
+  var sp=document.getElementById('stat-level');if(sp)sp.textContent=S.level+'%';
+  var spt=document.getElementById('stat-pts');if(spt)spt.textContent=S.points.toLocaleString('de');
+  var bd=document.getElementById('breakdown-list');
+  if(bd){
+    var items=[{n:'Montag',e:'📅',g:312,p:52},{n:'Dienstag',e:'📅',g:198,p:33},{n:'Mittwoch',e:'📅',g:267,p:45},{n:'Donnerstag',e:'📅',g:143,p:24},{n:'Freitag',e:'📅',g:320,p:53}];
+    bd.innerHTML=items.map(function(b){return '<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-size:14px;font-weight:600">'+b.n+'</span><span style="font-size:13px;color:var(--text2)">'+b.g+'g</span></div><div style="height:6px;background:var(--card2);border-radius:3px;overflow:hidden"><div style="height:100%;width:'+b.p+'%;background:linear-gradient(90deg,var(--aqua),var(--yellow));border-radius:3px"></div></div></div>';}).join('');
+  }
+}
+function setPeriod(btn,lbl){document.querySelectorAll('.period-tab').forEach(function(t){t.classList.remove('active');});btn.classList.add('active');showToast('Zeitraum: '+lbl);}
+
+function openChallenge(title,desc,pct,cur,max,unit,reward){
+  document.getElementById('modal-title').textContent='🏆 '+title;
+  document.getElementById('modal-body').innerHTML='<p style="margin-bottom:16px">'+desc+'</p><div style="background:var(--bg2);border-radius:12px;padding:14px;margin-bottom:14px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px"><span style="color:var(--text2)">Fortschritt</span><span style="font-weight:700;color:var(--aqua)">'+cur+'/'+max+' '+unit+'</span></div><div style="height:8px;background:var(--card);border-radius:4px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,var(--aqua),var(--aqua2));border-radius:4px"></div></div></div><div style="background:rgba(255,209,102,0.1);border:1px solid rgba(255,209,102,0.2);border-radius:12px;padding:12px;font-size:13px"><span style="color:var(--yellow);font-weight:700">🏅 Belohnung: </span>'+reward+'</div>';
+  document.getElementById('modal-extra').innerHTML='';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function openModal(title,body){document.getElementById('modal-title').textContent=title||'';document.getElementById('modal-body').textContent=body||'';document.getElementById('modal-extra').innerHTML='';document.getElementById('modal-overlay').classList.add('open');}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+
+var toastTimer;
+function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove('show');},2400);}
+function toggleSetting(row){var tg=row.querySelector('.toggle');if(!tg)return;tg.classList.toggle('on');showToast((tg.classList.contains('on')?'✅ ':'🔕 ')+row.querySelector('.setting-label').textContent+(tg.classList.contains('on')?' aktiviert':' deaktiviert'));}
+
+renderHome();
+renderStats();
+</script>
+</body>
+</html>

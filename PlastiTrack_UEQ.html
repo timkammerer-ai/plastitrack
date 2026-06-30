@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PlastiTrack – UEQ Bewertung</title>
+<style>
+:root{
+  --bg:#0A1628;--bg2:#0F1E35;--card:#132036;--card2:#1A2D47;
+  --aqua:#00D4AA;--aqua2:#00B894;--aqua-glow:rgba(0,212,170,0.12);
+  --orange:#FF6B35;--yellow:#FFD166;--text:#F0F9FF;
+  --text2:#94A3B8;--text3:#64748B;--border:rgba(255,255,255,0.07);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Inter','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* INTRO */
+#intro-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 24px;text-align:center;}
+.intro-fish{font-size:64px;margin-bottom:20px;animation:float 3s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+.intro-title{font-size:32px;font-weight:900;letter-spacing:-1px;margin-bottom:8px;}
+.intro-title span{color:var(--aqua);}
+.intro-subtitle{font-size:15px;color:var(--text2);line-height:1.6;max-width:400px;margin:0 auto 28px;}
+.intro-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 24px;max-width:420px;width:100%;margin-bottom:28px;text-align:left;}
+.intro-box p{font-size:13px;color:var(--text2);line-height:1.7;}
+.intro-box strong{color:var(--aqua);}
+.start-btn{padding:16px 40px;background:linear-gradient(135deg,var(--aqua),var(--aqua2));border:none;border-radius:14px;color:var(--bg);font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:-0.3px;}
+.start-btn:active{transform:scale(0.97);}
+
+/* MAIN */
+#survey-screen{display:none;max-width:680px;margin:0 auto;padding:24px 16px 60px;}
+.survey-header{text-align:center;margin-bottom:32px;}
+.survey-header h1{font-size:24px;font-weight:900;letter-spacing:-0.5px;margin-bottom:6px;}
+.survey-header p{font-size:13px;color:var(--text2);}
+
+/* Progress */
+.progress-wrap{margin-bottom:32px;}
+.progress-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:8px;font-weight:600;}
+.progress-meta span:last-child{color:var(--aqua);}
+.progress-bg{height:6px;background:var(--card2);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--aqua),var(--aqua2));border-radius:3px;transition:width 0.5s ease;}
+
+/* Scale item */
+.scale-item{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 20px 18px;margin-bottom:10px;transition:border-color 0.2s;}
+.scale-item.answered{border-color:rgba(0,212,170,0.25);}
+.scale-num{font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.scale-poles{display:flex;align-items:center;gap:10px;}
+.pole{font-size:13px;font-weight:600;color:var(--text2);flex:0 0 auto;width:110px;}
+.pole.right{text-align:right;}
+.scale-circles{display:flex;gap:6px;flex:1;justify-content:center;align-items:center;}
+.circle-btn{width:36px;height:36px;border-radius:50%;border:2px solid var(--card2);background:var(--card2);cursor:pointer;transition:all 0.15s;flex-shrink:0;position:relative;}
+.circle-btn:hover{border-color:var(--aqua);background:var(--aqua-glow);}
+.circle-btn.sel{background:var(--aqua);border-color:var(--aqua);box-shadow:0 0 0 4px rgba(0,212,170,0.2);}
+/* size variation to signal distance from center */
+.circle-btn.c1,.circle-btn.c7{width:32px;height:32px;}
+.circle-btn.c2,.circle-btn.c6{width:34px;height:34px;}
+.circle-btn.c3,.circle-btn.c5{width:36px;height:36px;}
+.circle-btn.c4{width:38px;height:38px;border-color:var(--text3);}
+.scale-labels-row{display:flex;justify-content:space-between;padding:0 2px;margin-top:6px;}
+.scale-labels-row span{font-size:9px;color:var(--text3);font-weight:700;}
+
+/* Group label */
+.group-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);padding:20px 0 8px;display:flex;align-items:center;gap:8px;}
+.group-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* Submit */
+.submit-section{text-align:center;margin-top:28px;}
+.submit-btn-main{padding:18px 48px;background:linear-gradient(135deg,var(--aqua),var(--aqua2));border:none;border-radius:14px;color:var(--bg);font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;opacity:0.35;pointer-events:none;transition:all 0.3s;}
+.submit-btn-main.ready{opacity:1;pointer-events:all;}
+.submit-hint{font-size:12px;color:var(--text3);margin-top:10px;}
+
+/* DONE */
+#done-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 24px;text-align:center;}
+.done-fish{font-size:72px;margin-bottom:20px;animation:float 3s ease-in-out infinite;}
+.done-title{font-size:28px;font-weight:900;margin-bottom:10px;letter-spacing:-0.5px;}
+.done-title span{color:var(--aqua);}
+.done-sub{font-size:14px;color:var(--text2);line-height:1.7;max-width:380px;margin:0 auto 28px;}
+.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:420px;width:100%;margin-bottom:28px;}
+.result-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;}
+.result-val{font-size:28px;font-weight:900;margin-bottom:4px;}
+.result-lbl{font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
+.result-sub{font-size:10px;color:var(--text3);margin-top:3px;}
+
+@media(max-width:500px){
+  .pole{width:80px;font-size:11px;}
+  .circle-btn{width:28px!important;height:28px!important;}
+  .scale-circles{gap:4px;}
+}
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div id="intro-screen">
+  <div class="intro-fish">🐟</div>
+  <div class="intro-title">Wie war deine<br><span>PlastiTrack</span>-Erfahrung?</div>
+  <div class="intro-subtitle">Kurze Bewertung der App &amp; des Sensor-Konzepts — dauert ca. 2 Minuten.</div>
+  <div class="intro-box">
+    <p>Du siehst jeweils <strong>zwei gegensätzliche Begriffe</strong>. Wähle den Kreis, der am besten beschreibt, wie du PlastiTrack erlebt hast.<br><br>
+    Entscheide <strong>spontan</strong> — deine erste Einschätzung zählt. Es gibt keine richtige oder falsche Antwort.</p>
+  </div>
+  <button class="start-btn" onclick="startSurvey()">Bewertung starten →</button>
+</div>
+
+<!-- SURVEY -->
+<div id="survey-screen">
+  <div class="survey-header">
+    <h1>🐟 PlastiTrack Bewertung</h1>
+    <p>User Experience Questionnaire (UEQ) · angepasst für PlastiTrack</p>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-meta"><span id="prog-text">0 von 26 beantwortet</span><span id="prog-pct">0%</span></div>
+    <div class="progress-bg"><div class="progress-fill" id="prog-bar" style="width:0%"></div></div>
+  </div>
+  <div id="items-container"></div>
+  <div class="submit-section">
+    <button class="submit-btn-main" id="submit-main" onclick="submitSurvey()">Bewertung abschicken 🐟</button>
+    <div class="submit-hint" id="submit-hint">Bitte beantworte alle 26 Fragen</div>
+  </div>
+</div>
+
+<!-- DONE -->
+<div id="done-screen">
+  <div class="done-fish">🐢</div>
+  <div class="done-title">Danke für dein<br><span>Feedback!</span></div>
+  <div class="done-sub">Deine Bewertung hilft uns, PlastiTrack für Studierende noch besser zu machen. Gemeinsam für eine plastikärmere Zukunft!</div>
+  <div class="results-grid" id="results-grid"></div>
+  <div style="font-size:12px;color:var(--text3);max-width:380px;line-height:1.6">Skala: −3 (negativ) bis +3 (positiv) · Basiert auf dem User Experience Questionnaire (UEQ)</div>
+</div>
+
+<script>
+// UEQ items adapted for PlastiTrack
+// Format: [left pole, right pole, dimension, positive side (1=left, 7=right)]
+var ITEMS = [
+  // ATTRACTIVENESS
+  {l:'unerfreulich', r:'erfreulich',       dim:'Attraktivität',    pos:7, n:1},
+  {l:'abstoßend',    r:'anziehend',        dim:'Attraktivität',    pos:7, n:14},
+  {l:'unangenehm',   r:'angenehm',         dim:'Attraktivität',    pos:7, n:16},
+  {l:'unattraktiv',  r:'attraktiv',        dim:'Attraktivität',    pos:7, n:24},
+  {l:'unsympathisch',r:'sympathisch',      dim:'Attraktivität',    pos:7, n:25},
+  {l:'schlecht',     r:'gut',              dim:'Attraktivität',    pos:7, n:12},
+  // PERSPICUITY
+  {l:'unverständlich',r:'verständlich',    dim:'Durchschaubarkeit',pos:7, n:2},
+  {l:'schwer zu lernen',r:'leicht zu lernen',dim:'Durchschaubarkeit',pos:7, n:4},
+  {l:'kompliziert',  r:'einfach',          dim:'Durchschaubarkeit',pos:7, n:13},
+  {l:'verwirrend',   r:'übersichtlich',    dim:'Durchschaubarkeit',pos:7, n:21},
+  // EFFICIENCY
+  {l:'langsam',      r:'schnell',          dim:'Effizienz',        pos:7, n:9},
+  {l:'ineffizient',  r:'effizient',        dim:'Effizienz',        pos:7, n:20},
+  {l:'unpragmatisch',r:'pragmatisch',      dim:'Effizienz',        pos:7, n:22},
+  {l:'überladen',    r:'aufgeräumt',       dim:'Effizienz',        pos:7, n:23},
+  // DEPENDABILITY
+  {l:'unberechenbar',r:'voraussagbar',     dim:'Verlässlichkeit',  pos:7, n:8},
+  {l:'behindernd',   r:'unterstützend',    dim:'Verlässlichkeit',  pos:7, n:11},
+  {l:'unsicher',     r:'sicher',           dim:'Verlässlichkeit',  pos:7, n:17},
+  {l:'nicht erwartungskonform',r:'erwartungskonform',dim:'Verlässlichkeit',pos:7,n:19},
+  // STIMULATION
+  {l:'langweilig',   r:'spannend',         dim:'Stimulation',      pos:7, n:6},
+  {l:'uninteressant',r:'interessant',      dim:'Stimulation',      pos:7, n:7},
+  {l:'einschläfernd',r:'aktivierend',      dim:'Stimulation',      pos:7, n:18},
+  {l:'minderwertig', r:'wertvoll',         dim:'Stimulation',      pos:7, n:5},
+  // NOVELTY
+  {l:'phantasielos', r:'kreativ',          dim:'Originalität',     pos:7, n:3},
+  {l:'konventionell',r:'originell',        dim:'Originalität',     pos:7, n:10},
+  {l:'herkömmlich',  r:'neuartig',         dim:'Originalität',     pos:7, n:15},
+  {l:'konservativ',  r:'innovativ',        dim:'Originalität',     pos:7, n:26},
+];
+
+var answers = {};
+var DIM_COLORS = {
+  'Attraktivität':   '#00D4AA',
+  'Durchschaubarkeit':'#60A5FA',
+  'Effizienz':       '#FFD166',
+  'Verlässlichkeit': '#A78BFA',
+  'Stimulation':     '#FF6B35',
+  'Originalität':    '#F472B6',
+};
+var DIM_EMOJI = {
+  'Attraktivität':   '✨',
+  'Durchschaubarkeit':'🔍',
+  'Effizienz':       '⚡',
+  'Verlässlichkeit': '🛡️',
+  'Stimulation':     '🚀',
+  'Originalität':    '💡',
+};
+
+function startSurvey(){
+  document.getElementById('intro-screen').style.display='none';
+  document.getElementById('survey-screen').style.display='block';
+  buildItems();
+  window.scrollTo(0,0);
+}
+
+function buildItems(){
+  var container=document.getElementById('items-container');
+  container.innerHTML='';
+  var lastDim='';
+  ITEMS.forEach(function(item,i){
+    if(item.dim!==lastDim){
+      var gl=document.createElement('div');
+      gl.className='group-label';
+      gl.innerHTML=DIM_EMOJI[item.dim]+' '+item.dim;
+      container.appendChild(gl);
+      lastDim=item.dim;
+    }
+    var row=document.createElement('div');
+    row.className='scale-item';
+    row.id='item-'+i;
+    var col=DIM_COLORS[item.dim]||'var(--aqua)';
+    row.innerHTML=
+      '<div class="scale-num" style="color:'+col+'">'+item.dim+' · Frage '+item.n+'</div>'+
+      '<div class="scale-poles">'+
+        '<div class="pole">'+item.l+'</div>'+
+        '<div class="scale-circles" id="circles-'+i+'">'+
+          [1,2,3,4,5,6,7].map(function(v){
+            return '<button class="circle-btn c'+v+'" onclick="setAnswer('+i+','+v+')" title="'+v+'" style="--ac:'+col+'"></button>';
+          }).join('')+
+        '</div>'+
+        '<div class="pole right">'+item.r+'</div>'+
+      '</div>'+
+      '<div class="scale-labels-row"><span>1</span><span>2</span><span>3</span><span style="flex:1;text-align:center">4<br><span style="color:var(--text3)">neutral</span></span><span>5</span><span>6</span><span>7</span></div>';
+    container.appendChild(row);
+  });
+}
+
+function setAnswer(idx,val){
+  answers[idx]=val;
+  // update circles
+  var circles=document.getElementById('circles-'+idx).children;
+  for(var i=0;i<circles.length;i++){
+    circles[i].classList.remove('sel');
+    if(i===(val-1)){
+      circles[i].classList.add('sel');
+      var col=DIM_COLORS[ITEMS[idx].dim]||'#00D4AA';
+      circles[i].style.background=col;
+      circles[i].style.borderColor=col;
+      circles[i].style.boxShadow='0 0 0 4px '+col+'33';
+    } else {
+      circles[i].style.background='';
+      circles[i].style.borderColor='';
+      circles[i].style.boxShadow='';
+    }
+  }
+  document.getElementById('item-'+idx).classList.add('answered');
+  updateProgress();
+}
+
+function updateProgress(){
+  var answered=Object.keys(answers).length;
+  var total=ITEMS.length;
+  var pct=Math.round((answered/total)*100);
+  document.getElementById('prog-text').textContent=answered+' von '+total+' beantwortet';
+  document.getElementById('prog-pct').textContent=pct+'%';
+  document.getElementById('prog-bar').style.width=pct+'%';
+  var btn=document.getElementById('submit-main');
+  var hint=document.getElementById('submit-hint');
+  if(answered===total){
+    btn.classList.add('ready');
+    hint.textContent='Alle Fragen beantwortet — bereit zum Absenden!';
+    hint.style.color='var(--aqua)';
+  } else {
+    btn.classList.remove('ready');
+    hint.textContent='Noch '+(total-answered)+' Frage(n) offen';
+    hint.style.color='';
+  }
+}
+
+function submitSurvey(){
+  if(Object.keys(answers).length<ITEMS.length)return;
+  // calculate dimension scores (convert to -3..+3)
+  var dimScores={};
+  var dimCounts={};
+  ITEMS.forEach(function(item,i){
+    var raw=answers[i];
+    // convert: pos side=7 means higher=better, recode to -3..+3
+    var score=(raw-4); // 1→-3, 4→0, 7→+3
+    // items where left is positive (none in our list, all pos:7)
+    if(item.pos===1) score=-score;
+    if(!dimScores[item.dim]){dimScores[item.dim]=0;dimCounts[item.dim]=0;}
+    dimScores[item.dim]+=score;
+    dimCounts[item.dim]++;
+  });
+  // show done screen
+  document.getElementById('survey-screen').style.display='none';
+  var done=document.getElementById('done-screen');
+  done.style.display='flex';
+  var grid=document.getElementById('results-grid');
+  grid.innerHTML='';
+  var dims=Object.keys(dimScores);
+  var overall=0;var n=0;
+  dims.forEach(function(d){
+    var avg=(dimScores[d]/dimCounts[d]).toFixed(2);
+    overall+=parseFloat(avg);n++;
+    var col=DIM_COLORS[d]||'var(--aqua)';
+    var card=document.createElement('div');
+    card.className='result-card';
+    var pct=Math.round(((parseFloat(avg)+3)/6)*100);
+    card.innerHTML='<div class="result-val" style="color:'+col+'">'+avg+'</div>'+
+      '<div class="result-lbl">'+DIM_EMOJI[d]+' '+d+'</div>'+
+      '<div style="height:5px;background:#1A2D47;border-radius:3px;overflow:hidden;margin:8px 4px 2px">'+
+        '<div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:3px"></div></div>'+
+      '<div class="result-sub">'+qualLabel(parseFloat(avg))+'</div>';
+    grid.appendChild(card);
+  });
+  // overall card
+  var oa=(overall/n).toFixed(2);
+  var oaCard=document.createElement('div');
+  oaCard.className='result-card';
+  oaCard.style.cssText='grid-column:1/-1;border-color:rgba(0,212,170,0.3);background:rgba(0,212,170,0.07)';
+  oaCard.innerHTML='<div class="result-val" style="color:var(--aqua);font-size:36px">'+oa+'</div>'+
+    '<div class="result-lbl">🌟 Gesamtbewertung</div>'+
+    '<div class="result-sub" style="font-size:12px;margin-top:6px">'+qualLabel(parseFloat(oa))+'</div>';
+  grid.appendChild(oaCard);
+  window.scrollTo(0,0);
+}
+
+function qualLabel(v){
+  if(v>=2.5)return '🏆 Exzellent';
+  if(v>=2.0)return '✅ Sehr gut';
+  if(v>=1.0)return '👍 Gut';
+  if(v>=0.5)return '🙂 Befriedigend';
+  if(v>=-0.5)return '😐 Neutral';
+  if(v>=-1.5)return '⚠️ Verbesserungsbedarf';
+  return '🔴 Überarbeitung nötig';
+}
+</script>
+</body>
+</html>
